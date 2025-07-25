@@ -1,0 +1,123 @@
+/* 通用样式 */
+* {
+box-sizing: border-box;
+}
+
+page {
+background-color: #f5f6fa;
+font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', SimSun, sans-serif;
+}
+
+/* 通用类 */
+.container {
+padding: 20px;
+}
+
+.card {
+background: white;
+border-radius: 12px;
+padding: 20px;
+box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+margin-bottom: 15px;
+}
+
+.btn {
+height: 44px;
+line-height: 44px;
+text-align: center;
+border-radius: 22px;
+font-size: 16px;
+font-weight: bold;
+
+&.btn-primary {
+  background: #667eea;
+  color: white;
+}
+
+&.btn-secondary {
+  background: #f8f9fa;
+  color: #666;
+  border: 1px solid #dee2e6;
+}
+
+&.btn-disabled {
+  background: #f8f9fa;
+  color: #ccc;
+}
+}
+
+.text-primary {
+color: #667eea;
+}
+
+.text-secondary {
+color: #666;
+}
+
+.text-success {
+color: #4caf50;
+}
+
+.text-warning {
+color: #ff9800;
+}
+
+.text-danger {
+color: #f44336;
+}
+
+.text-center {
+text-align: center;
+}
+
+.text-right {
+text-align: right;
+}
+
+.mb-10 {
+margin-bottom: 10px;
+}
+
+.mb-15 {
+margin-bottom: 15px;
+}
+
+.mb-20 {
+margin-bottom: 20px;
+}
+
+.mt-10 {
+margin-top: 10px;
+}
+
+.mt-15 {
+margin-top: 15px;
+}
+
+.mt-20 {
+margin-top: 20px;
+}
+
+.flex {
+display: flex;
+}
+
+.flex-1 {
+flex: 1;
+}
+
+.flex-center {
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+.flex-between {
+display: flex;
+align-items: center;
+justify-content: space-between;
+}
+
+.border-bottom {
+border-bottom: 1px solid #eee;
+}
