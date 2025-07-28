@@ -48,11 +48,6 @@
 </script>
 
 <style lang="scss">
-	/* 全局样式 */
-	* {
-		box-sizing: border-box;
-	}
-
 	page {
 		background-color: #f5f6fa;
 		font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', SimSun, sans-serif;
