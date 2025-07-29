@@ -11,16 +11,16 @@
       <!-- 头像区域 -->
       <view class="avatar-section" @click="setAvatar">
         <image class="avatar" :src="userInfo.avatar || '/static/images/default-avatar.png'" mode="aspectFill" />
-        <view class="avatar-edit">
-          <text class="edit-icon">📷</text>
-        </view>
       </view>
 
       <!-- 用户基本信息 -->
       <view class="info-section">
-        <view class="info-item">
+        <view class="info-item" @click="editName">
           <text class="label">姓名</text>
-          <text class="value">{{ userInfo.name || "未设置" }}</text>
+          <view class="value-with-arrow">
+            <text class="value">{{ userInfo.name || "未设置" }}</text>
+            <text class="arrow">›</text>
+          </view>
         </view>
 
         <view class="info-item">
@@ -49,6 +49,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useStore } from "vuex";
 import { onShow, onLoad } from "@dcloudio/uni-app";
+import { api } from "@/utils/request";
 
 // 初始化store
 const store = useStore();
@@ -177,6 +178,48 @@ const logout = () => {
   });
 };
 
+// 编辑姓名
+const editName = () => {
+  uni.showModal({
+    title: '修改姓名',
+    editable: true,
+    placeholderText: '请输入新姓名',
+    content: userInfo.value.name || '',
+    success: async (res) => {
+      if (res.confirm && res.content) {
+        await updateUserInfo({ name: res.content });
+      }
+    }
+  });
+};
+
+// 更新用户信息
+const updateUserInfo = async (data: any) => {
+  try {
+    uni.showLoading({ title: '更新中...' });
+    
+    const response = await api.updateUserInfo(data);
+    
+    // 更新本地store
+    store.commit('user/UPDATE_USER_INFO', { ...userInfo.value, ...data });
+    // 更新本地存储
+    uni.setStorageSync('userInfo', { ...userInfo.value, ...data });
+    
+    uni.showToast({
+      title: '更新成功',
+      icon: 'success'
+    });
+  } catch (error) {
+    console.error('更新用户信息失败:', error);
+    uni.showToast({
+      title: error.message || '更新失败',
+      icon: 'error'
+    });
+  } finally {
+    uni.hideLoading();
+  }
+};
+
 // 编辑资料
 const editProfile = () => {
   uni.showToast({
@@ -191,12 +234,33 @@ const setAvatar = () => {
     count: 1,
     sizeType: ["compressed"],
     sourceType: ["album", "camera"],
-    success: (res) => {
-      console.log("选择的图片:", res.tempFilePaths[0]);
-      uni.showToast({
-        title: "头像上传功能开发中",
-        icon: "none",
-      });
+    success: async (res) => {
+      const tempFilePath = res.tempFilePaths[0];
+      console.log("选择的图片:", tempFilePath);
+      
+      try {
+        uni.showLoading({ title: '上传中...' });
+        
+        // 使用封装的API上传头像
+        const data = await api.uploadAvatar(tempFilePath, userInfo.value.id);
+        
+        // 更新头像URL
+        const newAvatarUrl = data.data.avatarUrl;
+        await updateUserInfo({ avatar: newAvatarUrl });
+        
+        uni.showToast({
+          title: '头像更新成功',
+          icon: 'success'
+        });
+      } catch (error) {
+        console.error('上传头像失败:', error);
+        uni.showToast({
+          title: error.message || '上传失败',
+          icon: 'error'
+        });
+      } finally {
+        uni.hideLoading();
+      }
     },
   });
 };
@@ -251,24 +315,7 @@ defineExpose({
   box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
 }
 
-.avatar-edit {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 48rpx;
-  height: 48rpx;
-  background-color: #007aff;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border: 4rpx solid #fff;
-}
 
-.edit-icon {
-  color: #fff;
-  font-size: 24rpx;
-}
 
 .info-section {
   background-color: #fff;
@@ -299,6 +346,17 @@ defineExpose({
 .value {
   font-size: 32rpx;
   color: #666;
+}
+
+.value-with-arrow {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.arrow {
+  font-size: 36rpx;
+  color: #ccc;
 }
 
 .role-badge {

@@ -16,11 +16,31 @@ const getters = {
   userToken: (state) => state.token,
 };
 
+// 处理头像URL，确保使用完整的API路径
+const processAvatarUrl = (avatar) => {
+  if (!avatar) return '';
+  
+  // 如果是相对路径，添加基础URL
+  if (avatar.startsWith('/')) {
+    const BASE_URL = "http://127.0.0.1:8080/api";
+    return BASE_URL + avatar;
+  }
+  
+  // 如果是完整的URL，直接返回
+  return avatar;
+};
+
 const mutations = {
   SET_USER_INFO(state, userInfo) {
+    // 处理头像URL
+    const processedUserInfo = {
+      ...userInfo,
+      avatar: processAvatarUrl(userInfo.avatar)
+    };
+    
     state.userInfo = {
       ...state.userInfo,
-      ...userInfo,
+      ...processedUserInfo,
     };
   },
   SET_LOGIN_STATUS(state, status) {
@@ -40,6 +60,18 @@ const mutations = {
     state.isLogin = false;
     state.token = "";
   },
+  UPDATE_USER_INFO(state, userData) {
+    // 处理头像URL
+    const processedUserData = {
+      ...userData,
+      avatar: userData.avatar ? processAvatarUrl(userData.avatar) : state.userInfo.avatar
+    };
+    
+    state.userInfo = {
+      ...state.userInfo,
+      ...processedUserData,
+    };
+  },
 };
 
 const actions = {
@@ -58,7 +90,8 @@ const actions = {
           token: response.data.token,
           tokenType: response.data.tokenType,
           expiresIn: response.data.expiresIn,
-          userType: loginData.userType // 保存用户类型
+          userType: loginData.userType,
+          avatar: response.data.avatar,
         };
 
         // 保存用户信息

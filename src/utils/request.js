@@ -1,6 +1,64 @@
 // 请求基础配置
 const BASE_URL = "http://127.0.0.1:8080/api"; // 替换为你的API地址
 
+// 处理头像URL，确保使用完整的API路径
+const processAvatarUrl = (avatar) => {
+  if (!avatar) return '';
+  
+  // 如果是相对路径，添加基础URL
+  if (avatar.startsWith('/')) {
+    return BASE_URL + avatar;
+  }
+  
+  // 如果是完整的URL，直接返回
+  return avatar;
+};
+
+// 处理响应数据中的头像URL
+const processResponseData = (data) => {
+  if (!data) return data;
+  
+  // 如果是用户信息对象
+  if (data.avatar !== undefined) {
+    return {
+      ...data,
+      avatar: processAvatarUrl(data.avatar)
+    };
+  }
+  
+  // 如果是用户信息数组
+  if (Array.isArray(data) && data.length > 0 && data[0].avatar !== undefined) {
+    return data.map(item => ({
+      ...item,
+      avatar: processAvatarUrl(item.avatar)
+    }));
+  }
+  
+  // 如果是包含用户信息的对象
+  if (data.data && data.data.avatar !== undefined) {
+    return {
+      ...data,
+      data: {
+        ...data.data,
+        avatar: processAvatarUrl(data.data.avatar)
+      }
+    };
+  }
+  
+  // 如果是包含用户信息数组的对象
+  if (data.data && Array.isArray(data.data) && data.data.length > 0 && data.data[0].avatar !== undefined) {
+    return {
+      ...data,
+      data: data.data.map(item => ({
+        ...item,
+        avatar: processAvatarUrl(item.avatar)
+      }))
+    };
+  }
+  
+  return data;
+};
+
 // 请求拦截器
 const request = (options) => {
   return new Promise((resolve, reject) => {
@@ -130,6 +188,36 @@ export const api = {
       });
     });
   },
+
+  // 用户相关
+  uploadAvatar: (filePath, userId) => {
+    return new Promise((resolve, reject) => {
+      const token = uni.getStorageSync("token");
+
+      uni.uploadFile({
+        url: BASE_URL + "/user/upload-avatar",
+        filePath: filePath,
+        name: "avatar",
+        header: {
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+        formData: {
+          userId: userId
+        },
+        success: (res) => {
+          const data = JSON.parse(res.data);
+          if (data.code === 200) {
+            resolve(data);
+          } else {
+            reject(data);
+          }
+        },
+        fail: reject,
+      });
+    });
+  },
+
+  updateUserInfo: (data) => request({ url: "/user/update", method: "PUT", data }),
 };
 
 export default request;
