@@ -2,21 +2,15 @@
   <view class="profile-container">
     <!-- 加载状态 -->
     <view v-if="loading" class="loading-container">
-      <uni-load-more
-        status="loading"
-        content-text="{ contentText: { contentdown: '加载中...', contentrefresh: '加载中...', contentnomore: '加载完成' } }"
-      ></uni-load-more>
+      <uni-load-more status="loading"
+        content-text="{ contentText: { contentdown: '加载中...', contentrefresh: '加载中...', contentnomore: '加载完成' } }"></uni-load-more>
     </view>
 
     <!-- 用户信息 -->
     <view v-else class="profile-content">
       <!-- 头像区域 -->
       <view class="avatar-section" @click="setAvatar">
-        <image
-          class="avatar"
-          :src="userInfo.avatar || '/static/images/default-avatar.png'"
-          mode="aspectFill"
-        />
+        <image class="avatar" :src="userInfo.avatar || '/static/images/default-avatar.png'" mode="aspectFill" />
         <view class="avatar-edit">
           <text class="edit-icon">📷</text>
         </view>
@@ -30,14 +24,14 @@
         </view>
 
         <view class="info-item">
-          <text class="label">手机号</text>
-          <text class="value">{{ userInfo.phone || "未设置" }}</text>
+          <text class="label">用户名</text>
+          <text class="value">{{ userInfo.username || "未设置" }}</text>
         </view>
 
         <view class="info-item">
           <text class="label">角色</text>
-          <text class="value role-badge" :class="userInfo.role">
-            {{ userInfo.role === "teacher" ? "教师" : "学生" }}
+          <text class="value role-badge" :class="getRoleClass(userInfo.userType)">  
+            {{ getRoleText(userInfo.userType) }}
           </text>
         </view>
       </view>
@@ -45,7 +39,6 @@
       <!-- 操作按钮 -->
       <view class="action-section">
         <button class="edit-btn" @click="editProfile">编辑资料</button>
-
         <button class="logout-btn" @click="logout">退出登录</button>
       </view>
     </view>
@@ -55,6 +48,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useStore } from "vuex";
+import { onShow, onLoad } from "@dcloudio/uni-app";
 
 // 初始化store
 const store = useStore();
@@ -64,7 +58,41 @@ const loading = ref(false);
 const userInfo = computed(() => store.state.user.userInfo);
 const isLogin = computed(() => store.state.user.isLogin);
 
-// 获取用户信息
+// 获取角色文本 - 兼容字符串和数字
+const getRoleText = (role: any) => {
+  console.log("getRoleText 接收到的 role:", role, "类型:", typeof role);
+
+  // 转换为数字进行比较
+  const roleNum = Number(role);
+
+  switch (roleNum) {
+    case 1:
+      return "学生";
+    case 2:
+      return "老师";
+    case 3:
+      return "管理员";
+    default:
+      return `未知角色(${role})`;  // 显示原始值便于调试
+  }
+};
+
+// 获取角色样式类名 - 兼容字符串和数字
+const getRoleClass = (role: any) => {
+  const roleNum = Number(role);
+
+  switch (roleNum) {
+    case 1:
+      return "student";
+    case 2:
+      return "teacher";
+    case 3:
+      return "admin";
+    default:
+      return "default";
+  }
+};
+
 const fetchUserInfo = async () => {
   try {
     loading.value = true;
@@ -79,13 +107,39 @@ const fetchUserInfo = async () => {
       return;
     }
 
-    // 使用 Vuex 中的用户信息
+    // 检查 store 状态
+    console.log("=== Store 状态检查 ===");
+    console.log("store.state:", store.state);
+    console.log("store.state.user:", store.state.user);
+    console.log("store.state.user.userInfo:", store.state.user.userInfo);
+    console.log("isLogin:", store.state.user.isLogin);
+
+    // 如果用户信息为空，尝试重新获取
     if (!userInfo.value || Object.keys(userInfo.value).length === 0) {
-      uni.showToast({
-        title: "获取用户信息失败",
-        icon: "error",
-      });
+      console.log("用户信息为空，尝试重新获取...");
+
+      // 尝试从本地存储获取
+      const localUserInfo = uni.getStorageSync('userInfo');
+      console.log("本地存储的用户信息:", localUserInfo);
+
+      if (localUserInfo) {
+        // 如果本地有，更新到 store
+        store.commit('user/SET_USER_INFO', localUserInfo);
+      } else {
+        // 如果本地也没有，可能需要重新登录
+        uni.showToast({
+          title: "请重新登录",
+          icon: "error",
+        });
+        setTimeout(() => {
+          uni.redirectTo({
+            url: "/pages/login/login",
+          });
+        }, 1500);
+        return;
+      }
     }
+
   } catch (error: any) {
     console.error("获取用户信息失败:", error);
     uni.showToast({
@@ -96,6 +150,7 @@ const fetchUserInfo = async () => {
     loading.value = false;
   }
 };
+
 
 // 退出登录
 const logout = () => {
@@ -147,14 +202,14 @@ const setAvatar = () => {
 };
 
 // 页面生命周期
-const onLoad = () => {
+onLoad(() => {
   console.log("Profile page onLoad");
-};
+});
 
-const onShow = () => {
+onShow(() => {
   console.log("Profile page onShow");
   fetchUserInfo();
-};
+});
 
 // 暴露给页面生命周期使用
 defineExpose({
@@ -253,12 +308,21 @@ defineExpose({
   color: #fff;
 }
 
+/* 角色样式 */
+.role-badge.student {
+  background-color: #34c759;
+}
+
 .role-badge.teacher {
   background-color: #007aff;
 }
 
-.role-badge.student {
-  background-color: #34c759;
+.role-badge.admin {
+  background-color: #ff9500;
+}
+
+.role-badge.default {
+  background-color: #8e8e93;
 }
 
 .action-section {

@@ -11,11 +11,8 @@
     <view class="login-content">
       <!-- Logo区域 -->
       <view class="logo-section">
-        <image
-          class="logo"
-          :src="`/static/images/logo.png?t=${Date.now()}`"
-          mode="aspectFit"
-        ></image>
+        <image class="logo" :src="`/static/images/logo.png?t=${Date.now()}`" mode="aspectFit" @click="handleLogoClick"
+          hover-class="logo-hover"></image>
         <text class="app-name">教育培训管理</text>
         <text class="app-desc">专业的一对一教学管理平台</text>
       </view>
@@ -24,27 +21,26 @@
       <view class="role-section">
         <text class="section-title">选择身份</text>
         <view class="role-tabs">
-          <view
-            class="role-tab"
-            :class="{ active: loginForm.role === 0 }"
-            @click="selectRole(0)"
-            hover-class="role-tab-hover"
-          >
-            <view class="role-icon-container">
-              <text class="role-icon">👨‍🏫</text>
-            </view>
-            <text class="role-text">教师</text>
-          </view>
-          <view
-            class="role-tab"
-            :class="{ active: loginForm.role === 1 }"
-            @click="selectRole(1)"
-            hover-class="role-tab-hover"
-          >
+          <view class="role-tab" :class="{ active: loginForm.role === 0 }" @click="selectRole(0)"
+            hover-class="role-tab-hover">
             <view class="role-icon-container">
               <text class="role-icon">👨‍🎓</text>
             </view>
             <text class="role-text">学生</text>
+          </view>
+          <view class="role-tab" :class="{ active: loginForm.role === 1 }" @click="selectRole(1)"
+            hover-class="role-tab-hover">
+            <view class="role-icon-container">
+              <text class="role-icon">👨‍🏫</text>
+            </view>
+            <text class="role-text">老师</text>
+          </view>
+          <view v-if="showAdmin" class="role-tab" :class="{ active: loginForm.role === 2 }" @click="selectRole(2)"
+            hover-class="role-tab-hover">
+            <view class="role-icon-container">
+              <text class="role-icon">👨‍💼</text>
+            </view>
+            <text class="role-text">管理员</text>
           </view>
         </view>
       </view>
@@ -53,17 +49,11 @@
       <view class="form-section">
         <view class="form-item">
           <view class="form-label">
-            <view class="label-icon phone-icon"></view>
-            <text class="label-text">手机号</text>
+            <view class="label-icon user-icon"></view>
+            <text class="label-text">用户名</text>
           </view>
-          <input
-            class="form-input"
-            type="number"
-            placeholder="请输入手机号"
-            v-model="loginForm.phone"
-            maxlength="11"
-            placeholder-class="input-placeholder"
-          />
+          <input class="form-input" type="text" placeholder="请输入用户名" v-model="loginForm.username"
+            placeholder-class="input-placeholder" />
         </view>
 
         <view class="form-item">
@@ -72,68 +62,36 @@
             <text class="label-text">密码</text>
           </view>
           <view class="input-wrapper">
-            <input
-              class="form-input"
-              :type="showPassword ? 'text' : 'password'"
-              placeholder="请输入密码"
-              v-model="loginForm.password"
-              placeholder-class="input-placeholder"
-            />
-            <view
-              class="password-toggle"
-              @click="togglePassword"
-              hover-class="toggle-hover"
-            >
-              <view
-                class="toggle-icon"
-                :class="showPassword ? 'eye-off-icon' : 'eye-icon'"
-              ></view>
+            <input class="form-input" :type="showPassword ? 'text' : 'password'" placeholder="请输入密码"
+              v-model="loginForm.password" placeholder-class="input-placeholder" />
+            <view class="password-toggle" @click="togglePassword" hover-class="toggle-hover">
+              <view class="toggle-icon" :class="showPassword ? 'eye-off-icon' : 'eye-icon'"></view>
             </view>
           </view>
         </view>
 
         <!-- 记住密码 -->
         <view class="form-options">
-          <view
-            class="remember-password"
-            @click="toggleRemember"
-            hover-class="option-hover"
-          >
+          <view class="remember-password" @click="toggleRemember" hover-class="option-hover">
             <view class="checkbox" :class="{ checked: rememberPassword }">
               <view v-if="rememberPassword" class="check-icon"></view>
             </view>
             <text class="remember-text">记住密码</text>
           </view>
-          <text
-            class="forgot-password"
-            @click="forgotPassword"
-            hover-class="option-hover"
-            >忘记密码？</text
-          >
+          <text class="forgot-password" @click="forgotPassword" hover-class="option-hover">忘记密码？</text>
         </view>
       </view>
 
       <!-- 登录按钮 -->
       <view class="button-section">
-        <button
-          class="login-btn"
-          :class="{ disabled: !canSubmit }"
-          :disabled="!canSubmit"
-          @click="handleLogin"
-          :loading="loading"
-          hover-class="login-btn-hover"
-        >
+        <button class="login-btn" :class="{ disabled: !canSubmit }" :disabled="!canSubmit" @click="handleLogin"
+          :loading="loading" hover-class="login-btn-hover">
           {{ loading ? "登录中..." : "登录" }}
         </button>
 
         <view class="register-section">
           <text class="register-text">还没有账号？</text>
-          <text
-            class="register-link"
-            @click="goRegister"
-            hover-class="link-hover"
-            >立即注册</text
-          >
+          <text class="register-link" @click="goRegister" hover-class="link-hover">立即注册</text>
         </view>
       </view>
     </view>
@@ -153,23 +111,25 @@ const statusBarHeight = ref(0);
 const showPassword = ref(false);
 const rememberPassword = ref(false);
 const loading = ref(false);
+const showAdmin = ref(false);
+const logoClickCount = ref(0);
 const loginForm = ref({
-  phone: "",
+  username: "",
   password: "",
-  role: 1, // 默认学生身份
+  role: 0, // 默认老师身份
 });
 
 // 计算属性
 const canSubmit = computed(() => {
   return (
-    loginForm.value.phone.length === 11 &&
+    loginForm.value.username.trim() !== "" &&
     loginForm.value.password.length >= 6 &&
     !loading.value
   );
 });
 
-// 方法 0 代表老师 ｜ 1 代表学生
-const selectRole = (role: 0 | 1) => {
+// 方法 0 代表老师->2 ｜ 1 代表学生->1 ｜ 2 代表管理员->3
+const selectRole = (role: 0 | 1 | 2) => {
   loginForm.value.role = role;
   // 添加触感反馈
   if (uni.vibrateShort) {
@@ -177,6 +137,25 @@ const selectRole = (role: 0 | 1) => {
       success: function () {
         console.log("振动成功");
       },
+    });
+  }
+};
+
+const handleLogoClick = () => {
+  logoClickCount.value++;
+  if (logoClickCount.value === 5) {
+    showAdmin.value = true;
+    uni.showToast({
+      title: "管理员权限已开启",
+      icon: "success",
+      duration: 1500,
+    });
+  }
+  if (logoClickCount.value > 0 && logoClickCount.value < 5) {
+    uni.showToast({
+      title: `再点击${5 - logoClickCount.value}次开启管理员权限`,
+      icon: "none",
+      duration: 1000,
     });
   }
 };
@@ -192,7 +171,7 @@ const toggleRemember = () => {
 const loadRememberedPassword = () => {
   const savedAccount = uni.getStorageSync("savedAccount");
   if (savedAccount) {
-    loginForm.value.phone = savedAccount.phone;
+    loginForm.value.username = savedAccount.username;
     loginForm.value.password = savedAccount.password;
     loginForm.value.role = savedAccount.role;
     rememberPassword.value = true;
@@ -202,7 +181,7 @@ const loadRememberedPassword = () => {
 const saveAccount = () => {
   if (rememberPassword.value) {
     uni.setStorageSync("savedAccount", {
-      phone: loginForm.value.phone,
+      username: loginForm.value.username,
       password: loginForm.value.password,
       role: loginForm.value.role,
     });
@@ -215,9 +194,9 @@ const handleLogin = async () => {
   if (!canSubmit.value) return;
 
   // 简单验证
-  if (!/^1[3-9]\d{9}$/.test(loginForm.value.phone)) {
+  if (!loginForm.value.username.trim()) {
     uni.showToast({
-      title: "请输入正确的手机号",
+      title: "请输入用户名",
       icon: "none",
       duration: 2000,
     });
@@ -229,17 +208,17 @@ const handleLogin = async () => {
   try {
     // 准备登录数据
     const loginData = {
-      username: loginForm.value.phone,
+      username: loginForm.value.username,
       password: loginForm.value.password,
-      role: loginForm.value.role
+      userType: loginForm.value.role === 0 ? 1 : loginForm.value.role === 1 ? 2 : 3 // 0:学生->1, 1:老师->2, 2:管理员->3
     };
-    
+
     console.log('准备登录，数据:', loginData);
 
     // 保存登录信息到Vuex
     const dispatchResult = await store.dispatch("user/login", loginData);
     console.log('Vuex dispatch 结果:', dispatchResult);
-    
+
     if (dispatchResult.success) {
       // 检查store中的状态
       console.log('Store中的用户信息:', store.getters['user/userInfo']);
@@ -369,31 +348,38 @@ defineExpose({
 }
 
 .login-content {
-  padding: 100px 20px 30px; /* 减少顶部和两侧间距 */
+  padding: 100px 20px 30px;
+  /* 减少顶部和两侧间距 */
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* 确保内容从顶部开始 */
+  justify-content: flex-start;
+  /* 确保内容从顶部开始 */
   box-sizing: border-box;
 }
 
 .logo-section {
   text-align: center;
-  margin-bottom: 30px; /* 减少底部间距 */
+  margin-bottom: 30px;
+  /* 减少底部间距 */
   animation: fadeInDown 0.8s ease-out;
 
   .logo {
-    width: 80px; /* 减小logo尺寸 */
+    width: 80px;
+    /* 减小logo尺寸 */
     height: 80px;
-    margin-bottom: 15px; /* 减少间距 */
+    margin-bottom: 15px;
+    /* 减少间距 */
     border-radius: 18px;
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease;
   }
 
   .app-name {
     display: block;
     color: white;
-    font-size: 24px; /* 稍微减小字体 */
+    font-size: 24px;
+    /* 稍微减小字体 */
     font-weight: bold;
     margin-bottom: 8px;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -408,7 +394,8 @@ defineExpose({
 }
 
 .role-section {
-  margin-bottom: 25px; /* 减少底部间距 */
+  margin-bottom: 25px;
+  /* 减少底部间距 */
   animation: fadeInUp 0.8s ease-out 0.2s both;
 
   .section-title {
@@ -418,77 +405,89 @@ defineExpose({
     font-weight: bold;
     margin-bottom: 12px;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+
+
   }
 
   .role-tabs {
     display: flex;
-    gap: 15px; /* 减少间距 */
+    gap: 10px;
+    justify-content: center;
+    min-height: 100rpx;
+  }
 
-    .role-tab {
-      flex: 1;
-      background: rgba(255, 255, 255, 0.15);
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 14px;
-      padding: 12px 8px; /* 减少内边距 */
-      text-align: center;
-      transition: all 0.3s;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  .role-tab {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 14px;
+    padding: 12px 8px;
+    text-align: center;
+    transition: all 0.3s;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 
-      &.active {
-        background: rgba(255, 255, 255, 0.95);
-        border-color: rgba(255, 255, 255, 0.95);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
-
-        .role-text {
-          color: #4a6bdf;
-        }
-      }
-
-      &-hover {
-        opacity: 0.9;
-        transform: scale(0.98);
-      }
-
-      .role-icon-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin: 0 auto 6px;
-        width: 40px; /* 减小图标容器尺寸 */
-        height: 40px;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 50%;
-
-        .active & {
-          background: rgba(74, 107, 223, 0.1);
-        }
-      }
-
-      .role-icon {
-        display: block;
-        font-size: 24px; /* 减小图标尺寸 */
-      }
+    &.active {
+      background: rgba(255, 255, 255, 0.95);
+      border-color: rgba(255, 255, 255, 0.95);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
 
       .role-text {
-        display: block;
-        color: white;
-        font-size: 14px;
-        font-weight: bold;
+        color: #4a6bdf;
       }
+    }
+
+    &-hover {
+      opacity: 0.9;
+      transform: scale(0.98);
+    }
+
+    .role-icon-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto 6px;
+      width: 40px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+
+      .active & {
+        background: rgba(74, 107, 223, 0.1);
+      }
+    }
+
+    .role-icon {
+      display: block;
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .role-text {
+      display: block;
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
     }
   }
 }
 
 .form-section {
-  margin-bottom: 25px; /* 减少底部间距 */
+  margin-bottom: 25px;
+  /* 减少底部间距 */
   animation: fadeInUp 0.8s ease-out 0.4s both;
-  width: 100%; /* 确保表单占满宽度 */
+  width: 100%;
+  /* 确保表单占满宽度 */
 
   .form-item {
     background: rgba(255, 255, 255, 0.95);
     border-radius: 14px;
-    margin-bottom: 15px; /* 减少间距 */
+    margin-bottom: 15px;
+    /* 减少间距 */
     overflow: hidden;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     transition: all 0.3s;
@@ -501,7 +500,8 @@ defineExpose({
     .form-label {
       display: flex;
       align-items: center;
-      padding: 10px 16px 4px; /* 减少内边距 */
+      padding: 10px 16px 4px;
+      /* 减少内边距 */
       background: rgba(74, 107, 223, 0.08);
       border-bottom: 1px solid rgba(74, 107, 223, 0.1);
 
@@ -520,13 +520,15 @@ defineExpose({
 
     .form-input {
       width: 100%;
-      padding: 14px 16px; /* 调整内边距 */
+      padding: 14px 16px;
+      /* 调整内边距 */
       font-size: 16px;
       color: #333;
       border: none;
       background: transparent;
       box-sizing: border-box;
-      height: 48px; /* 固定高度 */
+      height: 48px;
+      /* 固定高度 */
     }
 
     /* 修改placeholder样式，确保不会上移 */
@@ -547,7 +549,8 @@ defineExpose({
         right: 14px;
         top: 50%;
         transform: translateY(-50%);
-        width: 32px; /* 减小尺寸 */
+        width: 32px;
+        /* 减小尺寸 */
         height: 32px;
         display: flex;
         align-items: center;
@@ -572,7 +575,8 @@ defineExpose({
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 12px; /* 减少间距 */
+    margin-top: 12px;
+    /* 减少间距 */
     padding: 0 5px;
 
     .remember-password {
@@ -586,7 +590,8 @@ defineExpose({
       }
 
       .checkbox {
-        width: 16px; /* 减小尺寸 */
+        width: 16px;
+        /* 减小尺寸 */
         height: 16px;
         border: 2px solid rgba(255, 255, 255, 0.8);
         border-radius: 4px;
@@ -610,13 +615,15 @@ defineExpose({
 
       .remember-text {
         color: rgba(255, 255, 255, 0.9);
-        font-size: 13px; /* 减小字体 */
+        font-size: 13px;
+        /* 减小字体 */
       }
     }
 
     .forgot-password {
       color: rgba(255, 255, 255, 0.9);
-      font-size: 13px; /* 减小字体 */
+      font-size: 13px;
+      /* 减小字体 */
       text-decoration: underline;
       padding: 5px;
       border-radius: 8px;
@@ -629,17 +636,20 @@ defineExpose({
 }
 
 .button-section {
-  margin-top: 30px; /* 固定顶部间距，不再使用auto */
+  margin-top: 30px;
+  /* 固定顶部间距，不再使用auto */
   animation: fadeInUp 0.8s ease-out 0.6s both;
 
   .login-btn {
     width: 100%;
-    height: 50px; /* 减小高度 */
+    height: 50px;
+    /* 减小高度 */
     background: white;
     color: #4a6bdf;
     border: none;
     border-radius: 25px;
-    font-size: 17px; /* 减小字体 */
+    font-size: 17px;
+    /* 减小字体 */
     font-weight: bold;
     margin-bottom: 20px;
     transition: all 0.3s;
@@ -662,12 +672,14 @@ defineExpose({
 
     .register-text {
       color: rgba(255, 255, 255, 0.8);
-      font-size: 13px; /* 减小字体 */
+      font-size: 13px;
+      /* 减小字体 */
     }
 
     .register-link {
       color: white;
-      font-size: 13px; /* 减小字体 */
+      font-size: 13px;
+      /* 减小字体 */
       font-weight: bold;
       margin-left: 5px;
       text-decoration: underline;
@@ -682,38 +694,39 @@ defineExpose({
 }
 
 /* 图标样式 - 使用CSS绘制 */
+.user-icon {
+  background: #4a6bdf;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'%3E%3C/path%3E%3Ccircle cx='12' cy='7' r='4'%3E%3C/circle%3E%3C/svg%3E") no-repeat center;
+  mask-size: contain;
+}
+
 .phone-icon {
   background: #4a6bdf;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z'/%3E%3C/svg%3E")
-    no-repeat center;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z'/%3E%3C/svg%3E") no-repeat center;
   mask-size: contain;
 }
 
 .lock-icon {
   background: #4a6bdf;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Crect x='3' y='11' width='18' height='11' rx='2' ry='2'/%3E%3Cpath d='M7 11V7a5 5 0 0 1 10 0v4'/%3E%3C/svg%3E")
-    no-repeat center;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Crect x='3' y='11' width='18' height='11' rx='2' ry='2'/%3E%3Cpath d='M7 11V7a5 5 0 0 1 10 0v4'/%3E%3C/svg%3E") no-repeat center;
   mask-size: contain;
 }
 
 .eye-icon {
   background: #666;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E")
-    no-repeat center;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E") no-repeat center;
   mask-size: contain;
 }
 
 .eye-off-icon {
   background: #666;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24'/%3E%3Cline x1='1' y1='1' x2='23' y2='23'/%3E%3C/svg%3E")
-    no-repeat center;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24'/%3E%3Cline x1='1' y1='1' x2='23' y2='23'/%3E%3C/svg%3E") no-repeat center;
   mask-size: contain;
 }
 
 .check-icon {
   background: #4a6bdf;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='3'%3E%3Cpolyline points='20,6 9,17 4,12'/%3E%3C/svg%3E")
-    no-repeat center;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='3'%3E%3Cpolyline points='20,6 9,17 4,12'/%3E%3C/svg%3E") no-repeat center;
   mask-size: contain;
 }
 
@@ -723,6 +736,7 @@ defineExpose({
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -734,6 +748,7 @@ defineExpose({
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

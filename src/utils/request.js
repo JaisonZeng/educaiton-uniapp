@@ -1,5 +1,5 @@
 // 请求基础配置
-const BASE_URL = "http://127.0.0.1:5276/api"; // 替换为你的API地址
+const BASE_URL = "http://127.0.0.1:8080/api"; // 替换为你的API地址
 
 // 请求拦截器
 const request = (options) => {

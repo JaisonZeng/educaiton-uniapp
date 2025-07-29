@@ -122,7 +122,7 @@ interface UserInfo {
   name: string;
   phone: string;
   avatar: string;
-  role: "teacher" | "student";
+  role: number;
 }
 
 interface StatData {
@@ -273,9 +273,9 @@ const loadUserInfo = () => {
     userInfo.value = {
       id: storeUserInfo.id || "",
       name: storeUserInfo.name || "",
-      phone: storeUserInfo.phone || "",
+      username: storeUserInfo.username || "",
       avatar: storeUserInfo.avatar || "",
-      role: storeUserInfo.role || 1,
+      role: storeUserInfo.userType || 1, // 1:学生, 2:老师, 3:管理员
     };
     console.log('设置后的用户信息:', userInfo.value);
   }
@@ -286,7 +286,7 @@ const loadData = async () => {
     console.log("加载首页数据");
 
     // 根据用户角色获取不同的数据
-    if (userInfo.value.role === 0) {
+    if (userInfo.value.role === 2) {
       // 教师数据
       statsData.value = [
         { label: "今日课程", value: 3, icon: "📚" },
@@ -413,7 +413,7 @@ const viewAllActivities = () => {
 const showQuickActions = () => {
   // 根据用户角色显示不同的快捷操作
   const actions =
-    userInfo.value.role === "teacher"
+    userInfo.value.role === 2
       ? ["新建课程", "批改作业", "添加教材", "查看统计"]
       : ["预约课程", "提交作业", "查看课表", "学习记录"];
 

@@ -2,9 +2,9 @@ const state = {
   userInfo: {
     id: "",
     name: "",
-    phone: "",
+    username: "",
     avatar: "",
-    role: "student", // teacher 或 student
+    userType: 1, // 1:学生, 2:老师, 3:管理员
   },
   isLogin: false,
   token: "",
@@ -33,9 +33,9 @@ const mutations = {
     state.userInfo = {
       id: "",
       name: "",
-      phone: "",
+      username: "",
       avatar: "",
-      role: "student",
+      userType: 1, // 1:学生, 2:老师, 3:管理员
     };
     state.isLogin = false;
     state.token = "";
@@ -49,21 +49,32 @@ const actions = {
       // 调用真实的登录API
       const response = await api.login(loginData);
       
-      if (response.success) {
+      if (response.code === 200) {
+        // 映射新的接口数据格式到userInfo结构
+        const userInfo = {
+          id: response.data.userId,
+          name: response.data.nickname,
+          username: response.data.username,
+          token: response.data.token,
+          tokenType: response.data.tokenType,
+          expiresIn: response.data.expiresIn,
+          userType: loginData.userType // 保存用户类型
+        };
+
         // 保存用户信息
-        commit("SET_USER_INFO", response.data.userInfo);
+        commit("SET_USER_INFO", userInfo);
         commit("SET_TOKEN", response.data.token);
         commit("SET_LOGIN_STATUS", true);
 
         // 保存到本地存储
         uni.setStorageSync("token", response.data.token);
-        uni.setStorageSync("userInfo", response.data.userInfo);
+        uni.setStorageSync("userInfo", userInfo);
 
         return {
           success: true,
           data: {
             token: response.data.token,
-            userInfo: response.data.userInfo
+            userInfo: userInfo
           }
         };
       } else {
