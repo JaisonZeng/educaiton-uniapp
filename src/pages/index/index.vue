@@ -55,7 +55,7 @@
 
     <!-- 功能菜单 -->
     <view class="menu-section">
-      <text class="menu-title">快捷功能</text>
+      <view class="menu-title">快捷功能</view>
       <view class="menu-grid">
         <view
           class="menu-item"
@@ -372,7 +372,7 @@ const loadData = async () => {
 };
 
 const goToProfile = () => {
-  uni.navigateTo({
+  uni.switchTab({
     url: "/pages/profile/profile",
   });
 };
@@ -630,7 +630,7 @@ onShow(() => {
       position: relative;
       padding: 3px;
       border-radius: 9999px; /* 使用极大的值确保完全圆形 */
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #92a4f3 0%, #b982ef 100%);
       box-shadow: 0 4px 10px rgba(118, 75, 162, 0.25);
       transition: all 0.3s ease;
       width: 50px; /* 确保宽高一致 */

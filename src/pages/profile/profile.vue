@@ -30,7 +30,7 @@
 
         <view class="info-item">
           <text class="label">角色</text>
-          <text class="value role-badge" :class="getRoleClass(userInfo.userType)">  
+          <text class="value role-badge" :class="getRoleClass(userInfo.userType)">
             {{ getRoleText(userInfo.userType) }}
           </text>
         </view>
@@ -38,7 +38,7 @@
 
       <!-- 操作按钮 -->
       <view class="action-section">
-        <button class="edit-btn" @click="editProfile">编辑资料</button>
+        <button class="change-password-btn" @click="changePassword">修改密码</button>
         <button class="logout-btn" @click="logout">退出登录</button>
       </view>
     </view>
@@ -197,14 +197,14 @@ const editName = () => {
 const updateUserInfo = async (data: any) => {
   try {
     uni.showLoading({ title: '更新中...' });
-    
+
     const response = await api.updateUserInfo(data);
-    
+
     // 更新本地store
     store.commit('user/UPDATE_USER_INFO', { ...userInfo.value, ...data });
     // 更新本地存储
     uni.setStorageSync('userInfo', { ...userInfo.value, ...data });
-    
+
     uni.showToast({
       title: '更新成功',
       icon: 'success'
@@ -215,17 +215,7 @@ const updateUserInfo = async (data: any) => {
       title: error.message || '更新失败',
       icon: 'error'
     });
-  } finally {
-    uni.hideLoading();
-  }
-};
-
-// 编辑资料
-const editProfile = () => {
-  uni.showToast({
-    title: "功能开发中",
-    icon: "none",
-  });
+  };
 };
 
 // 设置头像
@@ -237,17 +227,17 @@ const setAvatar = () => {
     success: async (res) => {
       const tempFilePath = res.tempFilePaths[0];
       console.log("选择的图片:", tempFilePath);
-      
+
       try {
         uni.showLoading({ title: '上传中...' });
-        
+
         // 使用封装的API上传头像
         const data = await api.uploadAvatar(tempFilePath, userInfo.value.id);
-        
+
         // 更新头像URL
         const newAvatarUrl = data.data.avatarUrl;
         await updateUserInfo({ avatar: newAvatarUrl });
-        
+
         uni.showToast({
           title: '头像更新成功',
           icon: 'success'
@@ -262,6 +252,24 @@ const setAvatar = () => {
         uni.hideLoading();
       }
     },
+  });
+};
+
+// 修改密码
+const changePassword = () => {
+  uni.showModal({
+    title: '修改密码',
+    content: '确定要修改密码吗？',
+    confirmText: '确定',
+    cancelText: '取消',
+    success: async (res) => {
+      if (res.confirm) {
+        // 跳转到修改密码页面
+        uni.navigateTo({
+          url: '/pages/profile/change-password'
+        });
+      }
+    }
   });
 };
 
@@ -389,28 +397,20 @@ defineExpose({
   gap: 24rpx;
 }
 
-.edit-btn,
-.logout-btn {
-  height: 88rpx;
-  border-radius: 44rpx;
-  font-size: 32rpx;
-  font-weight: 500;
-  border: none;
+.change-password-btn {
+  background-color: #fff;
+  color: #007aff;
+  border: 2rpx solid #007aff;
 }
 
-.edit-btn {
-  background-color: #007aff;
-  color: #fff;
+.change-password-btn:active {
+  background-color: #f0f8ff;
 }
 
 .logout-btn {
   background-color: #fff;
   color: #ff3b30;
   border: 2rpx solid #ff3b30;
-}
-
-.edit-btn:active {
-  background-color: #0056d3;
 }
 
 .logout-btn:active {

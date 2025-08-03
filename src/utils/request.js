@@ -218,6 +218,7 @@ export const api = {
   },
 
   updateUserInfo: (data) => request({ url: "/user/update", method: "PUT", data }),
+  changePassword: (data) => request({ url: "/user/change-password", method: "POST", data }),
 };
 
 export default request;
